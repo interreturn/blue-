@@ -8,7 +8,7 @@ const connectDB = require("./Db.js");
 const User = require("./Userschema.js");
 const multer = require("multer");
 require("dotenv").config();
-const Dailyhoroscopetabroute = require("./routes/Dailyhoroscopetabroute.js");
+const Dailyhoroscopetabroute = require("./routes/Dailyhoroscopetabroute.js")
 const RegisterLogin = require("./routes/RegisterLogin.js");
 const Numerologyroute=require("./routes/Numerologyroute.js")
 const sqldataroute= require("./routes/sqldataroute.js")
