@@ -6,9 +6,9 @@ const { google } = require('googleapis');
 
 // Your OAuth2 credentials
 const CLIENT_ID = '214634605651-2lh78q02270183ooi6shit40uogvgvcf.apps.googleusercontent.com';
-const CLIENT_SECRET = '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';
+const CLIENT_SECRET = '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';
 const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
-const REFRESH_TOKEN = '1//043IlQe4hPIW6CgYIARAAGAQSNwF-L9IrSqRB-XtEk8_-4rkcNt0qXAOEJACXER-e00EhwbSbPDVuYDeaujNignCRrYeN1aOt8ow'
+const REFRESH_TOKEN = '1//0439pE3KF51edCgYIARAAGAQSNwF-L9IrayqvoEw7qPLfTiyTkcsmwOZDfJykuNNOc_pQWslYQvXGlNcttXIwwY57SnCu-Yg6SVc'
 
 // Create OAuth2 client
 const oAuth2Client = new google.auth.OAuth2(
@@ -50,5 +50,8 @@ async function sendEmail(to, subject, text, html) {
     throw error; // Optional: rethrow to handle it in the calling function
   }
 }
+
+//currently mail is not working due to some credentials issue they are expired  propbaly refresh token is only expired and . its beeter to use nodemailer but you 
+//i didnt use it because it needs gmail access or twofactor authentication and for that it needs phone no thats the reason
 
 module.exports = sendEmail;
