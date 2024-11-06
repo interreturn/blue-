@@ -22,7 +22,7 @@ router.post("/register", async (req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            console.log("User already exists:", email); // Log for debugging
+            // console.log("User already exists:", email); // Log for debugging
             return res.status(400).send("User already exists");
         }
 
@@ -106,7 +106,7 @@ router.post("/saveUserData", async (req, res) => {
         
         // Check if user already exists
         const existingUser = await User.findOne({ email: normalizedEmail });
-        console.log("Checking for existing user:", existingUser);
+        // console.log("Checking for existing user:", existingUser);
 
         if (!existingUser) {
             // Create a new user record
@@ -127,7 +127,7 @@ router.post("/saveUserData", async (req, res) => {
 
             // Generate a token for the new user
             const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
-            console.log(token)
+            // console.log(token)
 
             return res.status(201).json({ 
                 message: "User data saved successfully", 
@@ -136,7 +136,7 @@ router.post("/saveUserData", async (req, res) => {
         } else {
             // User already exists, log them in
             const token = jwt.sign({ id: existingUser._id, email: existingUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
-            console.log(token)
+            // console.log(token)
             console.log("User already exists, logging in:", normalizedEmail);
             return res.status(200).json({ 
                 message: "User logged in successfully", 

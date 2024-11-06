@@ -12,10 +12,17 @@ const Dailyhoroscopetabroute = require("./routes/Dailyhoroscopetabroute.js")
 const RegisterLogin = require("./routes/RegisterLogin.js");
 const Numerologyroute=require("./routes/Numerologyroute.js")
 const sqldataroute= require("./routes/sqldataroute.js")
+const { URL } = require("url");
+const https = require('https');
+
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Allow cross-origin requests
+
+
+app.use(cors({
+  origin: 'https://irisastro.com/' // Replace with your actual website URL
+}));
 
 const PORT = process.env.PORT || 3000;
 
@@ -38,10 +45,10 @@ app.put("/updateUser", async (req, res) => {
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Verify the token
       userId = decodedToken.id; // Extract user ID from token
     } else {
-      const { email } = req.body; // Extract email from request body if no token
-      const user = await User.findOne({ email }); // Find user by email
-      if (!user) return res.status(404).send("User not found");
-      userId = user._id; // Get user ID from the found user
+      // const { email } = req.body; // Extract email from request body if no token
+      // const user = await User.findOne({ email }); // Find user by email
+      // if (!user) return res.status(404).send("User not found");
+      // userId = user._id; // Get user ID from the found user
     }
 
     const { name, gender, dob, tob, placeOfBirth, zodiacSign, profilePhoto } =
@@ -84,17 +91,17 @@ app.get("/userinfo", async (req, res) => {
       userId = decodedToken.id;
     } else {
       // If no token, check if an email is passed as a query parameter
-      const email = req.query.email;
+      // const email = req.query.email;
 
-      if (!email) {
-        return res.status(400).send("Email required");
-      }
+      // if (!email) {
+      //   return res.status(400).send("Email required");
+      // }
 
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(404).send("User not found");
-      }
-      userId = user._id;
+      // const user = await User.findOne({ email });
+      // if (!user) {
+      //   return res.status(404).send("User not found");
+      // }
+      // userId = user._id;
     }
 
     // Fetch user data by userId
@@ -108,6 +115,48 @@ app.get("/userinfo", async (req, res) => {
     console.error("fetching user error:", error);
     res.status(500).send("Server error");
   }
+});
+
+app.post('/send-to-slack', (req, res) => {
+  const webhookUrl = 'https://hooks.slack.com/services/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';
+  const messageText = JSON.stringify(req.body);
+  
+  const url = new URL(webhookUrl); // Parse the URL
+  
+  const options = {
+    hostname: url.hostname,
+    path: url.pathname,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(messageText),
+    },
+  };
+
+  const request = https.request(options, (response) => {
+    let responseBody = '';
+
+    response.on('data', (chunk) => {
+      responseBody += chunk;
+    });
+
+    response.on('end', () => {
+      if (response.statusCode === 200) {
+        res.status(200).send('Message sent to Slack.');
+      } else {
+        res.status(response.statusCode).send('Failed to send message: ' + responseBody);
+      }
+    });
+  });
+
+  request.on('error', (error) => {
+    console.error('Error forwarding message:', error);
+    res.status(500).send('Server error.');
+  });
+
+  // Write data to request body
+  request.write(messageText);
+  request.end();
 });
 
 app.use(Dailyhoroscopetabroute);
