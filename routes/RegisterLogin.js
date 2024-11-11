@@ -137,7 +137,7 @@ router.post("/saveUserData", async (req, res) => {
             // User already exists, log them in
             const token = jwt.sign({ id: existingUser._id, email: existingUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
             // console.log(token)
-            console.log("User already exists, logging in:", normalizedEmail);
+            // console.log("User already exists, logging in:", normalizedEmail);
             return res.status(200).json({ 
                 message: "User logged in successfully", 
                 token, 

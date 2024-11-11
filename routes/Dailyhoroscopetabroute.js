@@ -1,12 +1,20 @@
 // proxyRoutes.js
 const express = require("express");
 const https = require("https");
+const CryptoJS = require("crypto-js");
 
 const router = express.Router(); // Create a new router
-
 require('dotenv').config();
 
-// Proxy route for fetching data of the month all data regarding birthday but i have not used it anywhere 
+// Secret key for encryption and decryption (use a strong key and keep it safe)
+const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Store in .env file
+
+// Utility function to encrypt data
+const encryptData = (data) => {
+    return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+};
+
+// Proxy route for fetching data of the month (not used anywhere currently)
 router.get('/proxy', (req, res) => {
     const targetUrl = '';
 
@@ -18,9 +26,10 @@ router.get('/proxy', (req, res) => {
             data += chunk;
         });
 
-        // On end, parse and send the response
+        // On end, parse and send the encrypted response
         response.on('end', () => {
-            res.json(JSON.parse(data));
+            const encryptedData = encryptData(JSON.parse(data));
+            res.json({ data: encryptedData });
         });
 
     }).on('error', (error) => {
@@ -29,7 +38,7 @@ router.get('/proxy', (req, res) => {
     });
 });
 
-// Proxy route for fetching today's and tomorrow's data i have used in tab section for daily horoscope
+// Proxy route for fetching today's and tomorrow's data for the daily horoscope
 router.get('/proxy1', (req, res) => {
     const formatDate = (date) => {
         const year = date.getFullYear();
@@ -39,7 +48,7 @@ router.get('/proxy1', (req, res) => {
     };
 
     const today = new Date();
-    const todayUrl = `${ process.env.IDZLINKS}/${formatDate(today)}`; 
+    const todayUrl = `${process.env.IDZLINKS}/${formatDate(today)}`;
 
     https.get(todayUrl, (todayResponse) => {
         if (todayResponse.statusCode !== 200) {
@@ -68,7 +77,14 @@ router.get('/proxy1', (req, res) => {
                 });
 
                 tomorrowResponse.on('end', () => {
-                    res.json({ today: JSON.parse(todayData), tomorrow: JSON.parse(tomorrowData) });
+                    const encryptedTodayData = encryptData(JSON.parse(todayData));
+                    const encryptedTomorrowData = encryptData(JSON.parse(tomorrowData));
+
+                    // Send encrypted data in response
+                    res.json({
+                        today: encryptedTodayData,
+                        tomorrow: encryptedTomorrowData
+                    });
                 });
 
             }).on('error', (error) => {
