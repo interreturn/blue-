@@ -11,6 +11,7 @@ require("dotenv").config();
 const Dailyhoroscopetabroute = require("./routes/Dailyhoroscopetabroute.js")
 const RegisterLogin = require("./routes/RegisterLogin.js");
 const Numerologyroute=require("./routes/Numerologyroute.js")
+const Numerologyroute2= require("./routes/Numerologyroute2.js")
 const sqldataroute= require("./routes/sqldataroute.js")
 const { URL } = require("url");
 const https = require('https');
@@ -31,6 +32,7 @@ connectDB();
 
 app.use(RegisterLogin);
 app.use(Numerologyroute);
+app.use(Numerologyroute2)
 app.use(sqldataroute)
 
 
@@ -51,7 +53,7 @@ app.put("/updateUser", async (req, res) => {
       // userId = user._id; // Get user ID from the found user
     }
 
-    const { name, gender, dob, tob, placeOfBirth, zodiacSign, profilePhoto } =
+    const { name, gender, dob, tob, placeOfBirth, zodiacSign, profilePhoto,notSure } =
       req.body;
 
     // Find user by ID
@@ -66,6 +68,7 @@ app.put("/updateUser", async (req, res) => {
     if (placeOfBirth) user.placeOfBirth = placeOfBirth;
     if (zodiacSign) user.zodiacSign = zodiacSign;
     if (profilePhoto) user.profilePhoto = profilePhoto;
+    if (notSure==true) user.tob ="";
 
     // Save updated user
     await user.save();
@@ -117,7 +120,7 @@ app.get("/userinfo", async (req, res) => {
   }
 });
 
-app.post('/send-to-slack', (req, res) => {
+app.post('/slack', (req, res) => {
   const webhookUrl = 'https://hooks.slack.com/services/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';
   const messageText = JSON.stringify(req.body);
   

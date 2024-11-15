@@ -2,12 +2,13 @@
 const express = require("express");
 const https = require("https");
 const CryptoJS = require("crypto-js");
+require("dotenv").config();
 
 const router = express.Router(); // Create a new router
 require('dotenv').config();
 
 // Secret key for encryption and decryption (use a strong key and keep it safe)
-const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Store in .env file
+const secretKey =  process.env.encryptionkey|| 'your-secret-key'; // Store in .env file
 
 // Utility function to encrypt data
 const encryptData = (data) => {

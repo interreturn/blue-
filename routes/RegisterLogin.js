@@ -33,6 +33,11 @@ router.post("/register", async (req, res) => {
 
         // Generate a JWT token
         const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        res.status(201).json({
+            message: "User registered successfully",
+            token, // Send the generated token
+            user: { displayName, email } // Send user info if needed
+        });
 
         // Send a welcome email
         try {
@@ -46,15 +51,11 @@ router.post("/register", async (req, res) => {
         } catch (emailError) {
             console.error("Error sending email during registration:", emailError);
             // Optional: handle email error without affecting user registration
-            // return res.status(500).send("User registered, but email sending failed.");
+            return res.status(500).send("User registered, but email sending failed.");
         }
 
         // Respond with success and token
-        res.status(201).json({
-            message: "User registered successfully",
-            token, // Send the generated token
-            user: { displayName, email } // Send user info if needed
-        });
+       
     } catch (error) {
         console.error("Registration error:", error);
         res.status(500).send("Server error during registration");
@@ -148,5 +149,71 @@ router.post("/saveUserData", async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 });
+//change the link below here remeber to modify that link
+router.post('/forgot', async (req, res) => {
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email: req.body.email });
+
+    // If user not found, send error message
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Generate a unique JWT token for the user that contains the user's id
+    const token = jwt.sign({ userId: user._id ,pass:user.password}, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+    // Prepare email content
+    const subject = "Password Reset Request";
+    const text = `Hello ,\n\nPlease use the following link to reset your password:\n\nhttp://localhost:5173/resetpass/${token}\n\nThis link is valid for 10 minutes.\n\nIf you did not request a password reset, please ignore this email.`;
+    
+    // Send the token to the user's email
+    try {
+      await sendEmail(user.email, subject, text);
+      console.log("Password reset email sent successfully.");
+      res.send({ message: "Password reset email sent." });
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      res.status(500).send({ message: "Error sending password reset email." });
+    }
+
+  } catch (err) {
+    console.error("Error in /forgot route:", err);
+    res.status(500).send({ message: "An error occurred. Please try again." });
+  }
+});
+
+
+
+router.post('/resetpassword', async (req, res) => {
+    try {
+      const { password, token } = req.body;  // Extract password and token from the request body
+  
+      // Verify the token and extract the userId from it
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify token
+      const userId = decoded.userId;
+      const oldpass = decoded.pass; // Extract old password from the token
+  
+      // Find the user by userId
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).send({ message: "User not found" });
+      }
+  
+      // Compare the old password (from the token) with the current password stored in the database
+      if (oldpass !== user.password) {
+        return res.status(401).send({ message: "The reset link is expired." });
+      }
+  
+      // Update the user's password
+      user.password = password;  // Directly set the new password (in plain text)
+      await user.save();
+  
+      res.send({ message: "Password has been reset successfully" });  // Send success response
+    } catch (err) {
+      console.error("Error in /resetpassword route:", err);
+      res.status(500).send({ message: "An error occurred. Please try again." });
+    }
+  });
 
 module.exports = router;

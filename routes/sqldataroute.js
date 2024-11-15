@@ -1,10 +1,15 @@
 const express = require('express');
 const Database = require('better-sqlite3');
+const CryptoJS = require('crypto-js');
+require("dotenv").config();
 
 const router = express.Router();
 
 // Connect to the SQLite Database
 const db = new Database('palmreading.db', { verbose: console.log });
+
+// Secret key for encryption (make sure this is secure)
+const SECRET_KEY = process.env.encryptionkey ;
 
 // Helper function to execute a query and return results
 const dbQuery = (query, params = []) => {
@@ -14,6 +19,12 @@ const dbQuery = (query, params = []) => {
     } catch (err) {
         throw new Error(err.message);
     }
+};
+
+// Helper function for encryption
+const encryptData = (data) => {
+    const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+    return ciphertext;
 };
 
 // Combined route to fetch all the data with nested structure
@@ -56,10 +67,9 @@ router.get('/all-data/:sid/:hid', (req, res) => {
 
         allData.imgans = imgAnsRow[0];
 
-        // Send the final response with all nested and organized data
-        res.json(allData);
+        // Encrypt and send the response
+        res.json({ data: encryptData(allData) });
     } catch (error) {
-        console.error('Error fetching data:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -97,9 +107,9 @@ router.get('/fetch-dataaa', (req, res) => {
             result.push(currentHidData);
         }
 
-        res.json(result); // Send the result back as a JSON response
+        // Encrypt and send the response
+        res.json({ data: encryptData(result) });
     } catch (error) {
-        console.error('Error fetching data:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

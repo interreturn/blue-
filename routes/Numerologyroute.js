@@ -2,7 +2,11 @@ const express = require("express");
 const router = express.Router(); // Create a new router
 const moment = require('moment'); // Use moment.js for date validation
 require('dotenv').config();
+const CryptoJS = require("crypto-js");
+const encryptData = require("../encryption.js")
 const { birthDescriptions, descriptions,soulDescriptions,talentDescriptions  } = require('./Data.js'); // Assuming soulDescriptions is in Data.js
+
+
 
 // Function to calculate the Destiny Number based on the full name
 function calculateDestinyNumber(firstName, middleName, lastName) {
@@ -164,8 +168,12 @@ router.post('/birthdaydata', (req, res) => {
         hiddentalent:TalentResult // Include soul number in the results
     };
 
+    const encryptedResults = encryptData(results);
+
+    // Send the encrypted result back to the client
+    res.json( encryptedResults );
     // Send the result back to the client
-    res.json(results);
+  
 });
 
 module.exports = router;
