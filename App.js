@@ -16,7 +16,7 @@ const sqldataroute= require("./routes/sqldataroute.js")
 const { URL } = require("url");
 const https = require('https');
 
-
+ 
 const app = express();
 app.use(express.json());
 
@@ -121,7 +121,7 @@ app.get("/userinfo", async (req, res) => {
 });
 
 app.post('/slack', (req, res) => {
-  const webhookUrl = 'https://hooks.slack.com/services/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';
+  const webhookUrl = 'https://hooks.slack.com/services/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';
   const messageText = JSON.stringify(req.body);
   
   const url = new URL(webhookUrl); // Parse the URL

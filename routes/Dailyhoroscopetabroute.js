@@ -51,53 +51,52 @@ router.get('/proxy1', (req, res) => {
     const today = new Date();
     const todayUrl = `${process.env.IDZLINKS}/${formatDate(today)}`;
 
-    https.get(todayUrl, (todayResponse) => {
-        if (todayResponse.statusCode !== 200) {
-            return res.status(todayResponse.statusCode).json({ error: 'Error fetching today\'s data' });
-        }
-
-        let todayData = '';
-        todayResponse.on('data', (chunk) => {
-            todayData += chunk;
-        });
-
-        todayResponse.on('end', () => {
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-
-            const tomorrowUrl = `https://s3-us-west-2.amazonaws.com/idz-horoscopes/${formatDate(tomorrow)}`;
-
-            https.get(tomorrowUrl, (tomorrowResponse) => {
-                if (tomorrowResponse.statusCode !== 200) {
-                    return res.status(tomorrowResponse.statusCode).json({ error: 'Error fetching tomorrow\'s data' });
+    const fetchData = (url) =>
+        new Promise((resolve, reject) => {
+            https.get(url, (response) => {
+                if (response.statusCode !== 200) {
+                    return reject({ status: response.statusCode, error: `Error fetching data from ${url}` });
                 }
 
-                let tomorrowData = '';
-                tomorrowResponse.on('data', (chunk) => {
-                    tomorrowData += chunk;
+                let data = '';
+                response.on('data', (chunk) => {
+                    data += chunk;
                 });
 
-                tomorrowResponse.on('end', () => {
-                    const encryptedTodayData = encryptData(JSON.parse(todayData));
-                    const encryptedTomorrowData = encryptData(JSON.parse(tomorrowData));
-
-                    // Send encrypted data in response
-                    res.json({
-                        today: encryptedTodayData,
-                        tomorrow: encryptedTomorrowData
-                    });
-                });
-
-            }).on('error', (error) => {
-                console.error("Error fetching tomorrow's data:", error);
-                res.status(500).json({ error: 'Internal Server Error' });
-            });
+                response.on('end', () => resolve(data));
+            }).on('error', (error) => reject({ status: 500, error }));
         });
 
-    }).on('error', (error) => {
-        console.error("Error fetching today's data:", error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    });
+    const tomorrow = new Date(today);
+    const yesterday = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    yesterday.setDate(today.getDate() - 1);
+
+    const tomorrowUrl = `https://s3-us-west-2.amazonaws.com/idz-horoscopes/${formatDate(tomorrow)}`;
+    const yesterdayUrl = `https://s3-us-west-2.amazonaws.com/idz-horoscopes/${formatDate(yesterday)}`;
+
+    // Fetch data for today, tomorrow, and yesterday
+    Promise.all([
+        fetchData(todayUrl),
+        fetchData(tomorrowUrl),
+        fetchData(yesterdayUrl)
+    ])
+        .then(([todayData, tomorrowData, yesterdayData]) => {
+            const encryptedTodayData = encryptData(JSON.parse(todayData));
+            const encryptedTomorrowData = encryptData(JSON.parse(tomorrowData));
+            const encryptedyesterdayData = encryptData(JSON.parse(yesterdayData));
+
+            res.json({
+                today: encryptedTodayData,
+                tomorrow: encryptedTomorrowData,
+                yesterday: encryptedyesterdayData
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+            res.status(error.status || 500).json({ error: error.error || 'Internal Server Error' });
+        });
 });
+
 
 module.exports = router; // Export the router

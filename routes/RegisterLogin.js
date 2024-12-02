@@ -1,5 +1,6 @@
 const express = require("express");
 const User = require('../Userschema.js')
+const registerUserInFlodesk=require('../registerUserInFlodesk.js')
 
 
 const bcrypt = require('bcryptjs');
@@ -15,52 +16,75 @@ const router = express.Router();
 
 
 router.post("/register", async (req, res) => {
-    try {
-        const { displayName, email, password } = req.body;
-     
+  try {
+      const { displayName, email, password, birthdate } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            // console.log("User already exists:", email); // Log for debugging
-            return res.status(400).send("User already exists");
-        }
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+          return res.status(400).send("User already exists");
+      }
 
-        // Hash the password and create a new user
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ displayName, email, password: hashedPassword });
-        await newUser.save();
+      // Hash the password and create a new user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new User({ displayName, email, password: hashedPassword, dob: birthdate });
+      await newUser.save();
 
-        // Generate a JWT token
-        const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
-        res.status(201).json({
-            message: "User registered successfully",
-            token, // Send the generated token
-            user: { displayName, email } // Send user info if needed
-        });
+      // Generate a JWT token
+      const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        // Send a welcome email
-        try {
-            await sendEmail(
-                email, 
-                "Welcome to MyApp!", 
-                `Hello ${displayName},\n\nThank you for registering with MyApp. We're excited to have you on board!`,
-                `<p>Hello <strong>${displayName}</strong>,</p><p>Thank you for registering with <strong>MyApp</strong>. We're excited to have you on board!</p>`
-            );
-            console.log("Welcome email sent successfully.");
-        } catch (emailError) {
-            console.error("Error sending email during registration:", emailError);
-            // Optional: handle email error without affecting user registration
-            return res.status(500).send("User registered, but email sending failed.");
-        }
+      // Send the user registration success response (this is sent once the user is saved)
+      res.status(201).json({
+          message: "User registered successfully",
+          token, // Send the generated token
+          user: { displayName, email } // Send user info if needed
+      });
 
-        // Respond with success and token
-       
-    } catch (error) {
-        console.error("Registration error:", error);
-        res.status(500).send("Server error during registration");
+      // Call the Flodesk registration function (Only if registration was successful, don't send another response)
+      try {
+          const response = await registerUserInFlodesk(email, displayName);
+
+          // Log the Flodesk response if needed
+          console.log('Flodesk response:', response);
+      } catch (error) {
+          console.error("Error during Flodesk registration:", error.message);
+          // You can log the error or send an email notification for the failure
+      }
+
+      // Send a welcome email (Only if registration was successful, don't send another response)
+      try {
+        await sendEmail(
+            email,
+            "🌟 Welcome to Irisastro.com! 🌙",
+            `Hi ${displayName},\n\nWelcome to Irisastro.com! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.\n\nYour journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.\n\n✨ Here's what you can do now:\n- Check out your daily horoscope to see what the universe has in store for you today.\n- Explore your zodiac sign’s unique traits to uncover hidden aspects of your personality.\n- Dive into relationship and career insights tailored just for you!\n\nThank you for joining us. We can't wait to help you unlock the secrets of the stars. 🌌\n\nStay cosmic,\nThe [Your Horoscope Website Name] Team`,
+            `
+            <p>Hi <strong>${displayName}</strong>,</p>
+            <p>Welcome to <strong>[Your Horoscope Website Name]</strong>! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.</p>
+            <p>Your journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.</p>
+            <p><strong>✨ Here's what you can do now:</strong></p>
+            <ul>
+              <li>Check out your <strong>daily horoscope</strong> to see what the universe has in store for you today.</li>
+              <li>Explore your <strong>zodiac sign’s unique traits</strong> to uncover hidden aspects of your personality.</li>
+              <li>Dive into <strong>relationship and career insights</strong> tailored just for you!</li>
+            </ul>
+            <p>Thank you for joining us. We can't wait to help you unlock the secrets of the stars. 🌌</p>
+            <p><strong>Stay cosmic,</strong><br>The Irisastro.com Team</p>
+            `
+        );
+        console.log("Welcome email sent successfully.");
+    } catch (emailError) {
+        console.error("Error sending email during registration:", emailError);
+        // Optional: handle email error without affecting user registration
     }
+    
+
+  } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).send("Server error during registration");
+  }
 });
+
+
 
 // Login endpoint
 router.post("/login", async (req, res) => {
@@ -99,7 +123,7 @@ router.post("/login", async (req, res) => {
 
 router.post("/saveUserData", async (req, res) => {
     const { displayName, email } = req.body;
-    console.log("Received data:", { displayName, email });
+  
 
     try {
         // Normalize the email to lowercase for comparison
@@ -107,7 +131,17 @@ router.post("/saveUserData", async (req, res) => {
         
         // Check if user already exists
         const existingUser = await User.findOne({ email: normalizedEmail });
-        // console.log("Checking for existing user:", existingUser);
+ 
+      try {
+        if (existingUser.password) {
+         
+          return  res.status(500).json({ message: "try logging in using password" });
+         }
+      } catch (error) {console.log("first")
+        
+      }
+          
+
 
         if (!existingUser) {
             // Create a new user record
@@ -116,15 +150,29 @@ router.post("/saveUserData", async (req, res) => {
 
             // Attempt to send a welcome email
             try {
-                await sendEmail(
-                    normalizedEmail, 
-                    "Welcome to MyApp!", 
-                    `Hello ${displayName},\n\nThank you for registering with MyApp. We're excited to have you on board!`
-                );
-                console.log("Welcome email sent successfully.");
-            } catch (emailError) {
-                console.error("Error sending email during registration:", emailError);
-            }
+              await sendEmail(
+                  email,
+                  "🌟 Welcome to Irisastro.com! 🌙",
+                  `Hi ${displayName},\n\nWelcome to Irisastro.com! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.\n\nYour journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.\n\n✨ Here's what you can do now:\n- Check out your daily horoscope to see what the universe has in store for you today.\n- Explore your zodiac sign’s unique traits to uncover hidden aspects of your personality.\n- Dive into relationship and career insights tailored just for you!\n\nThank you for joining us. We can't wait to help you unlock the secrets of the stars. 🌌\n\nStay cosmic,\nThe [Your Horoscope Website Name] Team`,
+                  `
+                  <p>Hi <strong>${displayName}</strong>,</p>
+                  <p>Welcome to <strong>irisastro.com</strong>! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.</p>
+                  <p>Your journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.</p>
+                  <p><strong>✨ Here's what you can do now:</strong></p>
+                  <ul>
+                    <li>Check out your <strong>daily horoscope</strong> to see what the universe has in store for you today.</li>
+                    <li>Explore your <strong>zodiac sign’s unique traits</strong> to uncover hidden aspects of your personality.</li>
+                    <li>Dive into <strong>relationship and career insights</strong> tailored just for you!</li>
+                  </ul>
+                  <p>Thank you for joining us. We can't wait to help you unlock the secrets of the stars. 🌌</p>
+                  <p><strong>Stay cosmic,</strong><br>The Irisastro.com Team</p>
+                  `
+              );
+              console.log("Welcome email sent successfully.");
+          } catch (emailError) {
+              console.error("Error sending email during registration:", emailError);
+              // Optional: handle email error without affecting user registration
+          }
 
             // Generate a token for the new user
             const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
@@ -149,6 +197,9 @@ router.post("/saveUserData", async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 });
+
+
+
 //change the link below here remeber to modify that link
 router.post('/forgot', async (req, res) => {
   try {
@@ -159,6 +210,9 @@ router.post('/forgot', async (req, res) => {
     if (!user) {
       return res.status(404).send({ message: "User not found" });
     }
+    if (!user.password) {
+        return res.status(404).send({ message: "try using google login" });
+      }
 
     // Generate a unique JWT token for the user that contains the user's id
     const token = jwt.sign({ userId: user._id ,pass:user.password}, process.env.JWT_SECRET, { expiresIn: '10m' });
@@ -206,7 +260,8 @@ router.post('/resetpassword', async (req, res) => {
       }
   
       // Update the user's password
-      user.password = password;  // Directly set the new password (in plain text)
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;  // Directly set the new password (in plain text)
       await user.save();
   
       res.send({ message: "Password has been reset successfully" });  // Send success response
