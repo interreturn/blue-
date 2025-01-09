@@ -13,20 +13,23 @@ const RegisterLogin = require("./routes/RegisterLogin.js");
 const Numerologyroute=require("./routes/Numerologyroute.js")
 const Numerologyroute2= require("./routes/Numerologyroute2.js")
 const sqldataroute= require("./routes/sqldataroute.js")
+const paymentandorderroute=require("./routes/Paymentandorderroute.js")
 const { URL } = require("url");
 const https = require('https');
-
+const Razorpay = require('razorpay');
+const bodyParser = require('body-parser');
+const cloudinary = require('cloudinary').v2;
+const { v4: uuidv4 } = require('uuid');
  
 const app = express();
 app.use(express.json());
-
 
 app.use(cors({
   // origin: 'https://irisastro.com/' // Replace with your actual website URL
 }));
 
 const PORT = process.env.PORT || 3000;
-
+app.use(bodyParser.json());
 connectDB();
 
 
@@ -34,6 +37,79 @@ app.use(RegisterLogin);
 app.use(Numerologyroute);
 app.use(Numerologyroute2)
 app.use(sqldataroute)
+
+app.use(paymentandorderroute)
+// Set a limit for JSON and URL-encoded data (10MB in this case)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// razor pay
+const razorpayInstance = new Razorpay({
+  key_id: process.env.razorpay_key_id,     // Replace with your Razorpay key_id
+  key_secret: process.env.razorpay_key_secret, // Replace with your Razorpay key_secret
+});
+
+
+
+app.post('/createorder', async (req, res) => {
+  const {userId,  currency , currendata ,plantype} = req.body; // Get amount from frontend request
+// console.log(currendata)
+const plan= plantype.split(" ")
+const price =(plan[0]=="AI" )?1499:2499
+console.log(price)
+  try {
+    const order = await razorpayInstance.orders.create({
+      amount:Math.round(price * currendata),
+
+      // Amount in paise (1 INR = 100 paise)
+      currency: `${currency}`,
+     
+      receipt: `#${userId}_${uuidv4().replace(/-/g, '').substring(0, 7)}`, // Customized receipt
+      notes: {
+        userId: userId,
+        // productName: productname,
+        customMessage: "Thank you for your purchase!",
+      },
+     
+    });
+    
+    console.log(order.receipt)
+    res.status(200).json({
+      id: order.id, amount:order.amount, receipt:order.receipt
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Error creating order',
+    });
+  }
+});
+
+
+// app.post('/verify-payment', async (req, res) => {
+//   const { razorpay_payment_id, razorpay_order_id, razorpay_signature,formdata,userid } = req.body;
+
+//   // Use the Razorpay SDK to verify the payment signature
+//   const crypto = require('crypto');
+//   const body = razorpay_order_id + '|' + razorpay_payment_id;
+//   const expectedSignature = crypto
+//     .createHmac('sha256', 'xRtbtfEmy5Xtj1XDwgVn0BRg')
+//     .update(body)
+//     .digest('hex');
+
+//   if (razorpay_signature === expectedSignature) {
+//     res.status(200).json({ message: 'Payment verified' });
+
+
+//   } else {
+//     res.status(400).json({ message: 'Payment verification failed' });
+//   }
+// });
+
+
+//end of razor pay here
+
+
 
 
 // this is for updating the user i mean in profile page it updates data
