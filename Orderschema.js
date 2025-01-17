@@ -13,7 +13,7 @@ const OrderSchema = new mongoose.Schema({
     },
     email: {
       type: String,
-      required: true,
+      // required: true,
     },
     birthdate: {
       type: Date,
@@ -33,7 +33,7 @@ const OrderSchema = new mongoose.Schema({
     },
     question: {
       type: String,
-      required: true,
+      // required: true,
     },
     thecard: {
       type: String,
@@ -69,7 +69,7 @@ const OrderSchema = new mongoose.Schema({
   },
   estimatedtimeforreport: {
     type: Date,
-    required: true,
+    
   },
   status: {
     type: Number,

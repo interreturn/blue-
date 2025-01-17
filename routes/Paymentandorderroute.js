@@ -117,6 +117,16 @@ console.log("this ",name)
 });
 
 
+router.get('/myorders', (req, res) => {
+    const userId = req.query.id; // Access the `id` from the query parameters
+  
+    // Fetch orders using the userId
+    Order.find({ userId })
+      .then(orders => res.json({ success: true, orders }))
+      .catch(err => res.status(500).json({ success: false, message: err.message }));
+  });
+  
+
 
 
 module.exports = router;
