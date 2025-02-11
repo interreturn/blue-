@@ -25,7 +25,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  // origin: 'https://irisastro.com/' // Replace with your actual website URL
+  origin: 'https://irisastro.com/' // Replace with your actual website URL
 }));
 
 const PORT = process.env.PORT || 3000;

@@ -1,8 +1,9 @@
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 // Gmail account details for SMTP
-const USER_EMAIL = 'touchzinginterns@gmail.com'; // Your Gmail account
-const USER_PASSWORD = 'swuu lhdv ingj mxjg'; // You need to generate an app-specific password
+const USER_EMAIL =  process.env.EMAILTOSENDUSERMAIL; // Your Gmail account
+const USER_PASSWORD = process.env.APP_PASSWORD_formail; // You need to generate an app-specific password
 
 // Create a transporter using SMTP
 const transporter = nodemailer.createTransport({
@@ -12,6 +13,9 @@ const transporter = nodemailer.createTransport({
     pass: USER_PASSWORD, // Use an app password instead of your regular Gmail password
   },
 });
+
+
+
 
 async function sendEmail(to, subject, text, html) {
   try {

@@ -56,10 +56,10 @@ router.post("/register", async (req, res) => {
         await sendEmail(
             email,
             "🌟 Welcome to Irisastro.com! 🌙",
-            `Hi ${displayName},\n\nWelcome to Irisastro.com! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.\n\nYour journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.\n\n✨ Here's what you can do now:\n- Check out your daily horoscope to see what the universe has in store for you today.\n- Explore your zodiac sign’s unique traits to uncover hidden aspects of your personality.\n- Dive into relationship and career insights tailored just for you!\n\nThank you for joining us. We can't wait to help you unlock the secrets of the stars. 🌌\n\nStay cosmic,\nThe [Your Horoscope Website Name] Team`,
+            `Hi ${displayName},\n\nWelcome to Irisastro.com! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.\n\nYour journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.\n\n✨ Here's what you can do now:\n- Check out your daily horoscope to see what the universe has in store for you today.\n- Explore your zodiac sign’s unique traits to uncover hidden aspects of your personality.\n- Dive into relationship and career insights tailored just for you!\n\nThank you for joining us. We can't wait to help you unlock the secrets of the stars. 🌌\n\nStay cosmic,\nThe Irisastro  Team`,
             `
             <p>Hi <strong>${displayName}</strong>,</p>
-            <p>Welcome to <strong>[Your Horoscope Website Name]</strong>! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.</p>
+            <p>Welcome to <strong> IrisAstro</strong>! 🌠 We're thrilled to have you join our community of stargazers, dreamers, and cosmic enthusiasts.</p>
             <p>Your journey through the stars has just begun! Whether you're here for daily horoscope insights, deep zodiac explorations, or personalized astrology readings, we’ve got something special waiting for you.</p>
             <p><strong>✨ Here's what you can do now:</strong></p>
             <ul>
@@ -218,17 +218,20 @@ router.post('/forgot', async (req, res) => {
     const token = jwt.sign({ userId: user._id ,pass:user.password}, process.env.JWT_SECRET, { expiresIn: '10m' });
 
     // Prepare email content
+    // below change the website link
     const subject = "Password Reset Request";
-    const text = `Hello ,\n\nPlease use the following link to reset your password:\n\nhttp://localhost:5173/resetpass/${token}\n\nThis link is valid for 10 minutes.\n\nIf you did not request a password reset, please ignore this email.`;
+    const text = `Hello ,\n\nPlease use the following link to reset your password:\n\nhttps://irisastro.com/resetpass/${token}\n\nThis link is valid for 10 minutes.\n\nIf you did not request a password reset, please ignore this email.`;
     
     // Send the token to the user's email
     try {
+      console.log("started")
       await sendEmail(user.email, subject, text);
       console.log("Password reset email sent successfully.");
       res.send({ message: "Password reset email sent." });
     } catch (emailError) {
+      console.log("some error ")
       console.error("Error sending email:", emailError);
-      res.status(500).send({ message: "Error sending password reset email." });
+      res.status(500).send({ message: "Error sending password reset email.  fhh" });
     }
 
   } catch (err) {
