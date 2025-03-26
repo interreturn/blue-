@@ -14,6 +14,9 @@ const Numerologyroute=require("./routes/Numerologyroute.js")
 const Numerologyroute2= require("./routes/Numerologyroute2.js")
 const sqldataroute= require("./routes/sqldataroute.js")
 const paymentandorderroute=require("./routes/Paymentandorderroute.js")
+const chineseroute= require("./routes/Chineseroute.js")
+const Nameanalysis= require("./routes/Nameanalysis.js")
+const Lovecompatiblity= require("./routes/Lovecompatiblity.js")
 const { URL } = require("url");
 const https = require('https');
 const Razorpay = require('razorpay');
@@ -25,7 +28,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: 'https://irisastro.com/' // Replace with your actual website URL
+  // origin: 'https://irisastro.com/' // Replace with your actual website URL
 }));
 
 const PORT = process.env.PORT || 3000;
@@ -37,8 +40,10 @@ app.use(RegisterLogin);
 app.use(Numerologyroute);
 app.use(Numerologyroute2)
 app.use(sqldataroute)
-
+app.use(chineseroute)
 app.use(paymentandorderroute)
+app.use(Nameanalysis)
+app.use(Lovecompatiblity)
 // Set a limit for JSON and URL-encoded data (10MB in this case)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
