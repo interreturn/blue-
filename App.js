@@ -17,6 +17,7 @@ const paymentandorderroute=require("./routes/Paymentandorderroute.js")
 const chineseroute= require("./routes/Chineseroute.js")
 const Nameanalysis= require("./routes/Nameanalysis.js")
 const Lovecompatiblity= require("./routes/Lovecompatiblity.js")
+const personalityanalysis =require("./routes/personalityanalysis.js")
 const { URL } = require("url");
 const https = require('https');
 const Razorpay = require('razorpay');
@@ -35,7 +36,6 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 connectDB();
 
-
 app.use(RegisterLogin);
 app.use(Numerologyroute);
 app.use(Numerologyroute2)
@@ -44,6 +44,9 @@ app.use(chineseroute)
 app.use(paymentandorderroute)
 app.use(Nameanalysis)
 app.use(Lovecompatiblity)
+app.use(personalityanalysis)
+
+
 // Set a limit for JSON and URL-encoded data (10MB in this case)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
