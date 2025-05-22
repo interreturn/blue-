@@ -23,6 +23,7 @@ const manPath = path.join(__dirname, "man", `${sign}Man.txt`);
 const womanPath = path.join(__dirname, "Woman", `${sign}Woman.txt`);
 const RealtraitPath = path.join(__dirname, "Traits", `${sign}Traits.txt`);
 
+
   
   // const manPath = path.join(__filename, "man", `${sign}Man.txt`);
   // const womanPath = path.join(__filename, "Woman", `${sign}Woman.txt`);
