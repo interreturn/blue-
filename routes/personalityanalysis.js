@@ -17,7 +17,7 @@ router.post("/personality-analysis", (req, res) => {
   const traits = zodiacsigntraits.find((z) => z.sign === sign)?.result.gn;
 
 
-const manPath = path.join(__dirname, "man", `${sign}Man.txt`);
+const manPath = path.join(__dirname, "Man", `${sign}Man.txt`);
 const womanPath = path.join(__dirname, "Woman", `${sign}Woman.txt`);
 const RealtraitPath = path.join(__dirname, "Traits", `${sign}Traits.txt`);
 
